@@ -34,6 +34,14 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5173"
 
+    JWT_SECRET_KEY: str = ""
+    JWT_ALGORITHM: str = "HS256"
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+
+    ADMIN_NAME: str = ""
+    ADMIN_EMAIL: str = ""
+    ADMIN_PASSWORD: str = ""
+
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def assemble_database_url(cls, value: str, info) -> str:

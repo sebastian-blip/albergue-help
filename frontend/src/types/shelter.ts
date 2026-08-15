@@ -20,6 +20,35 @@ export interface Shelter {
   updated_at: string
 }
 
+export interface ShelterCreate {
+  name: string
+  description?: string | null
+  address: string
+  neighborhood: string
+  city: string
+  department: string
+  capacity: number
+  current_occupancy?: number
+  phone: string
+  contact_name: string
+}
+
+export interface ShelterUpdate {
+  name?: string
+  description?: string | null
+  address?: string
+  neighborhood?: string
+  city?: string
+  department?: string
+  capacity?: number
+  phone?: string
+  contact_name?: string
+}
+
+export interface ShelterOccupancyUpdate {
+  current_occupancy: number
+}
+
 export interface ShelterFilters {
   page?: number
   page_size?: number

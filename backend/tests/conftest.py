@@ -9,8 +9,12 @@ from sqlalchemy.pool import NullPool
 
 from app.core.config import settings
 from app.core.database import Base, get_db
+from app.core.security import create_access_token
 from app.main import app
 from app.modules.shelters.models import Shelter
+from app.modules.users.models import User, UserRole
+from app.modules.users.schemas import UserCreate
+from app.modules.users.service import UserService
 
 
 def _get_test_database_url() -> str:
@@ -82,8 +86,67 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
 
 
 @pytest_asyncio.fixture(autouse=True)
-async def clean_shelters() -> AsyncGenerator[None, None]:
-    """Remove all shelters after each test to keep tests isolated."""
+async def clean_tables() -> AsyncGenerator[None, None]:
+    """Remove all test data after each test to keep tests isolated."""
     yield
     async with test_engine.begin() as conn:
         await conn.execute(delete(Shelter))
+        await conn.execute(delete(User))
+
+
+@pytest_asyncio.fixture
+async def admin_user(db_session: AsyncSession) -> User:
+    service = UserService(db_session)
+    return await service.create_user(
+        UserCreate(
+            name="Admin",
+            email="admin@example.com",
+            password="admin-password",
+            role=UserRole.ADMIN,
+        )
+    )
+
+
+@pytest_asyncio.fixture
+async def operator_user(db_session: AsyncSession) -> User:
+    service = UserService(db_session)
+    return await service.create_user(
+        UserCreate(
+            name="Operator",
+            email="operator@example.com",
+            password="operator-password",
+            role=UserRole.OPERATOR,
+        )
+    )
+
+
+@pytest_asyncio.fixture
+def admin_token(admin_user: User) -> str:
+    return create_access_token(
+        {"sub": str(admin_user.id), "role": admin_user.role.value}
+    )
+
+
+@pytest_asyncio.fixture
+def operator_token(operator_user: User) -> str:
+    return create_access_token(
+        {"sub": str(operator_user.id), "role": operator_user.role.value}
+    )
+
+
+@pytest_asyncio.fixture
+def expired_token() -> str:
+    from datetime import datetime, timedelta, timezone
+
+    from jose import jwt
+
+    from app.core.config import settings
+
+    payload = {
+        "sub": "00000000-0000-0000-0000-000000000000",
+        "role": "ADMIN",
+        "exp": datetime.now(timezone.utc) - timedelta(minutes=1),
+    }
+    return jwt.encode(
+        payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
+    )

@@ -20,6 +20,7 @@ if config.config_file_name is not None:
 
 # Import models here so Alembic can autogenerate migrations in the future.
 from app.modules.shelters.models import Shelter  # noqa: F401
+from app.modules.users.models import User  # noqa: F401
 
 target_metadata = Base.metadata
 

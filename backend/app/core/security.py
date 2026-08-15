@@ -1,7 +1,50 @@
-"""Utilidades de seguridad transversales.
+from datetime import datetime, timedelta, timezone
+from typing import Any
 
-Este módulo se utilizará para hashing de contraseñas, JWT y otras utilidades de
-autenticación/autorización en futuras iteraciones.
-"""
+import bcrypt
+from jose import JWTError, jwt
 
-__all__: list[str] = []
+from app.core.config import settings
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return bcrypt.checkpw(
+        plain_password.encode("utf-8"), hashed_password.encode("utf-8")
+    )
+
+
+def get_password_hash(password: str) -> str:
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+
+def create_access_token(data: dict[str, Any]) -> str:
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + timedelta(
+        minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+    )
+    to_encode.update({"exp": expire})
+    return jwt.encode(
+        to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
+    )
+
+
+def decode_access_token(token: str) -> dict[str, Any] | None:
+    try:
+        payload = jwt.decode(
+            token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
+        )
+    except JWTError:
+        return None
+
+    if payload.get("sub") is None:
+        return None
+
+    return payload
+
+
+__all__ = [
+    "verify_password",
+    "get_password_hash",
+    "create_access_token",
+    "decode_access_token",
+]

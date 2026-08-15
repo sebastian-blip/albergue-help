@@ -24,9 +24,18 @@ def valid_payload() -> dict:
     }
 
 
+@pytest.fixture
+def auth_headers(admin_token: str) -> dict:
+    return {"Authorization": f"Bearer {admin_token}"}
+
+
 @pytest.mark.asyncio
-async def test_create_shelter(client: AsyncClient, valid_payload: dict) -> None:
-    response = await client.post("/api/v1/shelters", json=valid_payload)
+async def test_create_shelter(
+    client: AsyncClient, valid_payload: dict, auth_headers: dict
+) -> None:
+    response = await client.post(
+        "/api/v1/shelters", json=valid_payload, headers=auth_headers
+    )
 
     assert response.status_code == 201
     data = response.json()
@@ -39,10 +48,10 @@ async def test_create_shelter(client: AsyncClient, valid_payload: dict) -> None:
 
 @pytest.mark.asyncio
 async def test_create_shelter_rejects_invalid_capacity(
-    client: AsyncClient, valid_payload: dict
+    client: AsyncClient, valid_payload: dict, auth_headers: dict
 ) -> None:
     invalid = {**valid_payload, "capacity": 0}
-    response = await client.post("/api/v1/shelters", json=invalid)
+    response = await client.post("/api/v1/shelters", json=invalid, headers=auth_headers)
 
     assert response.status_code == 422
 
@@ -51,16 +60,21 @@ async def test_create_shelter_rejects_invalid_capacity(
 async def test_create_shelter_rejects_occupancy_exceeding_capacity(
     client: AsyncClient,
     valid_payload: dict,
+    auth_headers: dict,
 ) -> None:
     invalid = {**valid_payload, "capacity": 50, "current_occupancy": 51}
-    response = await client.post("/api/v1/shelters", json=invalid)
+    response = await client.post("/api/v1/shelters", json=invalid, headers=auth_headers)
 
     assert response.status_code == 422
 
 
 @pytest.mark.asyncio
-async def test_get_shelter(client: AsyncClient, valid_payload: dict) -> None:
-    created = (await client.post("/api/v1/shelters", json=valid_payload)).json()
+async def test_get_shelter(
+    client: AsyncClient, valid_payload: dict, auth_headers: dict
+) -> None:
+    created = (
+        await client.post("/api/v1/shelters", json=valid_payload, headers=auth_headers)
+    ).json()
     response = await client.get(f"/api/v1/shelters/{created['id']}")
 
     assert response.status_code == 200
@@ -78,8 +92,10 @@ async def test_get_shelter_not_found(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_list_shelters(client: AsyncClient, valid_payload: dict) -> None:
-    await client.post("/api/v1/shelters", json=valid_payload)
+async def test_list_shelters(
+    client: AsyncClient, valid_payload: dict, auth_headers: dict
+) -> None:
+    await client.post("/api/v1/shelters", json=valid_payload, headers=auth_headers)
     response = await client.get("/api/v1/shelters?page=1&page_size=10")
 
     assert response.status_code == 200
@@ -93,10 +109,16 @@ async def test_list_shelters(client: AsyncClient, valid_payload: dict) -> None:
 
 
 @pytest.mark.asyncio
-async def test_update_shelter(client: AsyncClient, valid_payload: dict) -> None:
-    created = (await client.post("/api/v1/shelters", json=valid_payload)).json()
+async def test_update_shelter(
+    client: AsyncClient, valid_payload: dict, auth_headers: dict
+) -> None:
+    created = (
+        await client.post("/api/v1/shelters", json=valid_payload, headers=auth_headers)
+    ).json()
     update = {"name": "Albergue Actualizado"}
-    response = await client.put(f"/api/v1/shelters/{created['id']}", json=update)
+    response = await client.put(
+        f"/api/v1/shelters/{created['id']}", json=update, headers=auth_headers
+    )
 
     assert response.status_code == 200
     data = response.json()
@@ -106,12 +128,15 @@ async def test_update_shelter(client: AsyncClient, valid_payload: dict) -> None:
 
 @pytest.mark.asyncio
 async def test_update_shelter_occupancy(
-    client: AsyncClient, valid_payload: dict
+    client: AsyncClient, valid_payload: dict, auth_headers: dict
 ) -> None:
-    created = (await client.post("/api/v1/shelters", json=valid_payload)).json()
+    created = (
+        await client.post("/api/v1/shelters", json=valid_payload, headers=auth_headers)
+    ).json()
     response = await client.patch(
         f"/api/v1/shelters/{created['id']}/occupancy",
         json={"current_occupancy": 100},
+        headers=auth_headers,
     )
 
     assert response.status_code == 200
@@ -125,14 +150,22 @@ async def test_update_shelter_occupancy(
 async def test_closed_shelter_remains_closed_after_occupancy_update(
     client: AsyncClient,
     valid_payload: dict,
+    auth_headers: dict,
 ) -> None:
-    created = (await client.post("/api/v1/shelters", json=valid_payload)).json()
+    created = (
+        await client.post("/api/v1/shelters", json=valid_payload, headers=auth_headers)
+    ).json()
 
-    await client.put(f"/api/v1/shelters/{created['id']}", json={"status": "CLOSED"})
+    await client.put(
+        f"/api/v1/shelters/{created['id']}",
+        json={"status": "CLOSED"},
+        headers=auth_headers,
+    )
 
     response = await client.patch(
         f"/api/v1/shelters/{created['id']}/occupancy",
         json={"current_occupancy": 50},
+        headers=auth_headers,
     )
 
     assert response.status_code == 200
@@ -141,9 +174,15 @@ async def test_closed_shelter_remains_closed_after_occupancy_update(
 
 
 @pytest.mark.asyncio
-async def test_delete_shelter(client: AsyncClient, valid_payload: dict) -> None:
-    created = (await client.post("/api/v1/shelters", json=valid_payload)).json()
-    response = await client.delete(f"/api/v1/shelters/{created['id']}")
+async def test_delete_shelter(
+    client: AsyncClient, valid_payload: dict, auth_headers: dict
+) -> None:
+    created = (
+        await client.post("/api/v1/shelters", json=valid_payload, headers=auth_headers)
+    ).json()
+    response = await client.delete(
+        f"/api/v1/shelters/{created['id']}", headers=auth_headers
+    )
 
     assert response.status_code == 204
 
@@ -152,8 +191,10 @@ async def test_delete_shelter(client: AsyncClient, valid_payload: dict) -> None:
 
 
 @pytest.mark.asyncio
-async def test_filter_by_city(client: AsyncClient, valid_payload: dict) -> None:
-    await client.post("/api/v1/shelters", json=valid_payload)
+async def test_filter_by_city(
+    client: AsyncClient, valid_payload: dict, auth_headers: dict
+) -> None:
+    await client.post("/api/v1/shelters", json=valid_payload, headers=auth_headers)
     response = await client.get("/api/v1/shelters?city=Cali")
 
     assert response.status_code == 200
@@ -164,9 +205,9 @@ async def test_filter_by_city(client: AsyncClient, valid_payload: dict) -> None:
 
 @pytest.mark.asyncio
 async def test_filter_by_city_is_case_insensitive(
-    client: AsyncClient, valid_payload: dict
+    client: AsyncClient, valid_payload: dict, auth_headers: dict
 ) -> None:
-    await client.post("/api/v1/shelters", json=valid_payload)
+    await client.post("/api/v1/shelters", json=valid_payload, headers=auth_headers)
     response = await client.get("/api/v1/shelters?city=cali")
 
     assert response.status_code == 200
@@ -174,8 +215,10 @@ async def test_filter_by_city_is_case_insensitive(
 
 
 @pytest.mark.asyncio
-async def test_filter_by_neighborhood(client: AsyncClient, valid_payload: dict) -> None:
-    await client.post("/api/v1/shelters", json=valid_payload)
+async def test_filter_by_neighborhood(
+    client: AsyncClient, valid_payload: dict, auth_headers: dict
+) -> None:
+    await client.post("/api/v1/shelters", json=valid_payload, headers=auth_headers)
     response = await client.get("/api/v1/shelters?neighborhood=San%20José")
 
     assert response.status_code == 200
@@ -186,9 +229,9 @@ async def test_filter_by_neighborhood(client: AsyncClient, valid_payload: dict) 
 
 @pytest.mark.asyncio
 async def test_filter_by_city_and_neighborhood(
-    client: AsyncClient, valid_payload: dict
+    client: AsyncClient, valid_payload: dict, auth_headers: dict
 ) -> None:
-    await client.post("/api/v1/shelters", json=valid_payload)
+    await client.post("/api/v1/shelters", json=valid_payload, headers=auth_headers)
     response = await client.get("/api/v1/shelters?city=Cali&neighborhood=San%20José")
 
     assert response.status_code == 200
@@ -196,8 +239,10 @@ async def test_filter_by_city_and_neighborhood(
 
 
 @pytest.mark.asyncio
-async def test_filter_by_department(client: AsyncClient, valid_payload: dict) -> None:
-    await client.post("/api/v1/shelters", json=valid_payload)
+async def test_filter_by_department(
+    client: AsyncClient, valid_payload: dict, auth_headers: dict
+) -> None:
+    await client.post("/api/v1/shelters", json=valid_payload, headers=auth_headers)
     response = await client.get("/api/v1/shelters?department=Valle%20del%20Cauca")
 
     assert response.status_code == 200
@@ -207,8 +252,10 @@ async def test_filter_by_department(client: AsyncClient, valid_payload: dict) ->
 
 
 @pytest.mark.asyncio
-async def test_filter_by_status(client: AsyncClient, valid_payload: dict) -> None:
-    await client.post("/api/v1/shelters", json=valid_payload)
+async def test_filter_by_status(
+    client: AsyncClient, valid_payload: dict, auth_headers: dict
+) -> None:
+    await client.post("/api/v1/shelters", json=valid_payload, headers=auth_headers)
     response = await client.get("/api/v1/shelters?status=OPEN")
 
     assert response.status_code == 200
@@ -219,9 +266,9 @@ async def test_filter_by_status(client: AsyncClient, valid_payload: dict) -> Non
 
 @pytest.mark.asyncio
 async def test_filter_by_verification_status(
-    client: AsyncClient, valid_payload: dict
+    client: AsyncClient, valid_payload: dict, auth_headers: dict
 ) -> None:
-    await client.post("/api/v1/shelters", json=valid_payload)
+    await client.post("/api/v1/shelters", json=valid_payload, headers=auth_headers)
     response = await client.get("/api/v1/shelters?verification_status=PENDING")
 
     assert response.status_code == 200
@@ -231,7 +278,9 @@ async def test_filter_by_verification_status(
 
 
 @pytest.mark.asyncio
-async def test_filter_has_capacity_true(client: AsyncClient) -> None:
+async def test_filter_has_capacity_true(
+    client: AsyncClient, auth_headers: dict
+) -> None:
     await client.post(
         "/api/v1/shelters",
         json={
@@ -245,6 +294,7 @@ async def test_filter_has_capacity_true(client: AsyncClient) -> None:
             "phone": "1",
             "contact_name": "X",
         },
+        headers=auth_headers,
     )
     await client.post(
         "/api/v1/shelters",
@@ -259,6 +309,7 @@ async def test_filter_has_capacity_true(client: AsyncClient) -> None:
             "phone": "1",
             "contact_name": "X",
         },
+        headers=auth_headers,
     )
 
     response = await client.get("/api/v1/shelters?has_capacity=true")
@@ -270,7 +321,9 @@ async def test_filter_has_capacity_true(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_filter_has_capacity_false(client: AsyncClient) -> None:
+async def test_filter_has_capacity_false(
+    client: AsyncClient, auth_headers: dict
+) -> None:
     await client.post(
         "/api/v1/shelters",
         json={
@@ -284,6 +337,7 @@ async def test_filter_has_capacity_false(client: AsyncClient) -> None:
             "phone": "1",
             "contact_name": "X",
         },
+        headers=auth_headers,
     )
     await client.post(
         "/api/v1/shelters",
@@ -298,6 +352,7 @@ async def test_filter_has_capacity_false(client: AsyncClient) -> None:
             "phone": "1",
             "contact_name": "X",
         },
+        headers=auth_headers,
     )
 
     response = await client.get("/api/v1/shelters?has_capacity=false")
@@ -311,6 +366,7 @@ async def test_filter_has_capacity_false(client: AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_filter_without_has_capacity_returns_all(
     client: AsyncClient,
+    auth_headers: dict,
 ) -> None:
     await client.post(
         "/api/v1/shelters",
@@ -325,6 +381,7 @@ async def test_filter_without_has_capacity_returns_all(
             "phone": "1",
             "contact_name": "X",
         },
+        headers=auth_headers,
     )
     await client.post(
         "/api/v1/shelters",
@@ -339,6 +396,7 @@ async def test_filter_without_has_capacity_returns_all(
             "phone": "1",
             "contact_name": "X",
         },
+        headers=auth_headers,
     )
 
     response = await client.get("/api/v1/shelters")
@@ -349,8 +407,10 @@ async def test_filter_without_has_capacity_returns_all(
 
 
 @pytest.mark.asyncio
-async def test_filter_combined(client: AsyncClient, valid_payload: dict) -> None:
-    await client.post("/api/v1/shelters", json=valid_payload)
+async def test_filter_combined(
+    client: AsyncClient, valid_payload: dict, auth_headers: dict
+) -> None:
+    await client.post("/api/v1/shelters", json=valid_payload, headers=auth_headers)
     await client.post(
         "/api/v1/shelters",
         json={
@@ -364,6 +424,7 @@ async def test_filter_combined(client: AsyncClient, valid_payload: dict) -> None
             "phone": "1",
             "contact_name": "X",
         },
+        headers=auth_headers,
     )
 
     response = await client.get(

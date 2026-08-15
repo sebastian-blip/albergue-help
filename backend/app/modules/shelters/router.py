@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.dependencies import CurrentUser
 from app.modules.shelters.exceptions import (
     InvalidShelterOccupancyError,
     ShelterNotFoundError,
@@ -33,7 +34,11 @@ def _get_service(session: AsyncSession) -> ShelterService:
     response_model=ShelterResponse,
     status_code=status.HTTP_201_CREATED,
 )
-async def create_shelter(payload: ShelterCreate, session: DbSession) -> ShelterResponse:
+async def create_shelter(
+    payload: ShelterCreate,
+    session: DbSession,
+    _: CurrentUser,
+) -> ShelterResponse:
     service = _get_service(session)
     try:
         shelter = await service.create_shelter(payload)
@@ -88,6 +93,7 @@ async def update_shelter(
     shelter_id: uuid.UUID,
     payload: ShelterUpdate,
     session: DbSession,
+    _: CurrentUser,
 ) -> ShelterResponse:
     service = _get_service(session)
     try:
@@ -111,6 +117,7 @@ async def update_shelter_occupancy(
     shelter_id: uuid.UUID,
     payload: ShelterOccupancyUpdate,
     session: DbSession,
+    _: CurrentUser,
 ) -> ShelterResponse:
     service = _get_service(session)
     try:
@@ -130,7 +137,11 @@ async def update_shelter_occupancy(
     "/{shelter_id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
-async def delete_shelter(shelter_id: uuid.UUID, session: DbSession) -> None:
+async def delete_shelter(
+    shelter_id: uuid.UUID,
+    session: DbSession,
+    _: CurrentUser,
+) -> None:
     service = _get_service(session)
     try:
         await service.delete_shelter(shelter_id)
