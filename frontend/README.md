@@ -12,6 +12,8 @@ Interfaz web/PWA para ayudar a personas durante situaciones de emergencia en Col
 - **Vite**
 - **TypeScript**
 - **Tailwind CSS**
+- **React Router**
+- **Lucide React**
 
 ## Estructura
 
@@ -40,6 +42,18 @@ cd frontend
 npm install
 ```
 
+## Configuración
+
+Copiar `.env.example` a `.env` y ajustar la URL del backend:
+
+```bash
+cp .env.example .env
+```
+
+```env
+VITE_API_URL=http://localhost:8000
+```
+
 ## Ejecución local
 
 ```bash
@@ -54,6 +68,7 @@ La aplicación estará disponible en `http://localhost:3000`.
 npm run build
 ```
 
-## Estado del proyecto
+## Rutas
 
-Este es el esqueleto inicial del frontend. Las pantallas, componentes y lógica de negocio se implementarán en siguientes iteraciones.
+- `/` — Listado y búsqueda de albergues
+- `/shelter/:id` — Detalle de un albergue
