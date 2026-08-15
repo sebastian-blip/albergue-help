@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
+import { AvailabilityWarning } from '../components/AvailabilityWarning'
+import { ContactContribution } from '../components/ContactContribution'
 import { EmptyState } from '../components/EmptyState'
 import { ErrorState } from '../components/ErrorState'
 import { LoadingState } from '../components/LoadingState'
@@ -60,6 +62,7 @@ export function HomePage() {
 
         {!loading && !error && result && result.items.length > 0 && (
           <div className="space-y-4">
+            <AvailabilityWarning variant="list" />
             <p className="text-sm text-gray-600">
               {result.total} {result.total === 1 ? 'albergue encontrado' : 'albergues encontrados'}
             </p>
@@ -68,6 +71,10 @@ export function HomePage() {
             ))}
           </div>
         )}
+      </section>
+
+      <section className="mt-8">
+        <ContactContribution />
       </section>
     </main>
   )

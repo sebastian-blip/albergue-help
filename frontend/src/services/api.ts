@@ -1,6 +1,7 @@
 import type { PaginatedShelters, Shelter, ShelterFilters } from '../types/shelter'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+export const API_BASE = API_URL.endsWith('/api') ? API_URL : `${API_URL}/api`
 
 function buildQueryString(filters: ShelterFilters): string {
   const params = new URLSearchParams()
@@ -36,11 +37,11 @@ async function handleResponse<T>(response: Response): Promise<T> {
 export async function getShelters(
   filters: ShelterFilters = {}
 ): Promise<PaginatedShelters> {
-  const response = await fetch(`${API_URL}/api/v1/shelters${buildQueryString(filters)}`)
+  const response = await fetch(`${API_BASE}/v1/shelters${buildQueryString(filters)}`)
   return handleResponse<PaginatedShelters>(response)
 }
 
 export async function getShelter(id: string): Promise<Shelter> {
-  const response = await fetch(`${API_URL}/api/v1/shelters/${id}`)
+  const response = await fetch(`${API_BASE}/v1/shelters/${id}`)
   return handleResponse<Shelter>(response)
 }

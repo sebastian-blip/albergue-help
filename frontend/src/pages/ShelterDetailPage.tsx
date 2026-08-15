@@ -2,6 +2,8 @@ import { ArrowLeft, MapPin, Phone, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { AvailabilityBadge } from '../components/AvailabilityBadge'
+import { AvailabilityWarning } from '../components/AvailabilityWarning'
+import { ContactContribution } from '../components/ContactContribution'
 import { ErrorState } from '../components/ErrorState'
 import { LoadingState } from '../components/LoadingState'
 import { getShelter } from '../services/api'
@@ -91,6 +93,10 @@ export function ShelterDetailPage() {
           </div>
         </div>
 
+        <div className="mb-6">
+          <AvailabilityWarning variant="detail" />
+        </div>
+
         <a
           href={phoneHref}
           className="inline-flex w-full items-center justify-center gap-2 rounded bg-blue-700 px-4 py-3 text-base font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2 sm:w-auto"
@@ -112,6 +118,10 @@ export function ShelterDetailPage() {
           </div>
         )}
       </article>
+
+      <section className="mt-8">
+        <ContactContribution />
+      </section>
     </main>
   )
 }

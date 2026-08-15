@@ -15,7 +15,7 @@ export function Header() {
         <Link to="/" className="inline-flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2">
           <Building2 className="h-5 w-5 text-blue-700" aria-hidden="true" />
           <span className="text-base font-semibold tracking-wide text-gray-900 uppercase">
-            Albergue Help
+            Resurge
           </span>
         </Link>
 

@@ -1,18 +1,26 @@
-FROM node:24-alpine
+# Stage 1: Build React app
+FROM node:24-alpine AS builder
 
 WORKDIR /app
 
-# Copiar archivos de dependencias primero para aprovechar cache de Docker
-COPY package.json package-lock.json ./
-
-# Instalar dependencias
+COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 
-# Copiar el resto del código fuente
-COPY . .
+COPY frontend/ ./
 
-# Exponer el puerto por defecto de Vite
-EXPOSE 3000
+ARG VITE_API_URL=/api
+ARG VITE_CONTACT_PHONE
+ENV VITE_API_URL=${VITE_API_URL}
+ENV VITE_CONTACT_PHONE=${VITE_CONTACT_PHONE}
 
-# Comando por defecto en modo desarrollo
-CMD ["npm", "run", "dev", "--", "--host", "--port", "3000"]
+RUN npm run build
+
+# Stage 2: Serve with Nginx
+FROM nginx:alpine
+
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
