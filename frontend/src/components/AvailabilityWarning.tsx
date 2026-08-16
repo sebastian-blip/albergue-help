@@ -7,8 +7,8 @@ interface AvailabilityWarningProps {
 export function AvailabilityWarning({ variant }: AvailabilityWarningProps) {
   const message =
     variant === 'list'
-      ? 'La disponibilidad puede cambiar rápidamente. Confirma la disponibilidad antes de desplazarte.'
-      : 'Los cupos mostrados corresponden a la última actualización reportada y pueden haber cambiado.'
+      ? 'La disponibilidad puede cambiar rápidamente. Confirma antes de desplazarte.'
+      : 'Los cupos mostrados corresponden a la última actualización reportada y puede haber cambios.'
 
   return (
     <div className="flex items-start gap-3 rounded border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
