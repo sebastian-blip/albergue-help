@@ -9,9 +9,9 @@ export interface Shelter {
   neighborhood: string
   city: string
   department: string
-  capacity: number
-  current_occupancy: number
-  available_capacity: number
+  capacity: number | null
+  current_occupancy: number | null
+  available_capacity: number | null
   phone: string
   contact_name: string
   status: ShelterStatus
@@ -27,8 +27,8 @@ export interface ShelterCreate {
   neighborhood: string
   city: string
   department: string
-  capacity: number
-  current_occupancy?: number
+  capacity: number | null
+  current_occupancy?: number | null
   phone: string
   contact_name: string
 }
@@ -40,7 +40,8 @@ export interface ShelterUpdate {
   neighborhood?: string
   city?: string
   department?: string
-  capacity?: number
+  capacity?: number | null
+  current_occupancy?: number | null
   phone?: string
   contact_name?: string
 }

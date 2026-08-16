@@ -21,24 +21,31 @@ export function OccupancyEditor({
 
   useEffect(() => {
     if (shelter) {
-      setValue(shelter.current_occupancy)
+      setValue(shelter.current_occupancy ?? 0)
       setError(null)
     }
   }, [shelter])
 
   if (!isOpen || !shelter) return null
 
-  const available = shelter.capacity - value
+  const capacityKnown = shelter.capacity !== null
+  const capacity = shelter.capacity ?? 0
+  const available = capacityKnown ? capacity - value : null
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     setError(null)
 
+    if (!capacityKnown) {
+      setError('No se puede actualizar la ocupación porque la capacidad no está informada')
+      return
+    }
+
     if (value < 0) {
       setError('La ocupación no puede ser negativa')
       return
     }
-    if (value > shelter.capacity) {
+    if (value > capacity) {
       setError('La ocupación no puede superar la capacidad')
       return
     }
@@ -57,18 +64,22 @@ export function OccupancyEditor({
         <div className="mb-4 grid grid-cols-3 gap-3 text-center">
           <div className="rounded bg-gray-50 p-3">
             <p className="text-xs text-gray-600">Capacidad</p>
-            <p className="text-lg font-semibold text-gray-900">{shelter.capacity}</p>
+            <p className="text-lg font-semibold text-gray-900">
+              {shelter.capacity ?? 'No informada'}
+            </p>
           </div>
           <div className="rounded bg-gray-50 p-3">
             <p className="text-xs text-gray-600">Ocupación actual</p>
             <p className="text-lg font-semibold text-gray-900">
-              {shelter.current_occupancy}
+              {shelter.current_occupancy ?? 'No informada'}
             </p>
           </div>
           <div className="rounded bg-gray-50 p-3">
             <p className="text-xs text-gray-600">Disponibles</p>
             <p className="text-lg font-semibold text-gray-900">
-              {shelter.capacity - shelter.current_occupancy}
+              {shelter.capacity !== null && shelter.current_occupancy !== null
+                ? shelter.capacity - shelter.current_occupancy
+                : '—'}
             </p>
           </div>
         </div>
@@ -81,16 +92,17 @@ export function OccupancyEditor({
             id="occupancy"
             type="number"
             min={0}
-            max={shelter.capacity}
+            max={shelter.capacity ?? undefined}
+            disabled={!capacityKnown}
             value={value}
             onChange={(e) => setValue(Number(e.target.value))}
-            className="w-full rounded border border-gray-300 px-3 py-2.5 text-base text-gray-900 focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
+            className="w-full rounded border border-gray-300 px-3 py-2.5 text-base text-gray-900 focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700 disabled:bg-gray-100 disabled:text-gray-500"
           />
           {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
 
           <p className="mt-2 text-sm text-gray-600">
             Disponibles después de actualizar:{' '}
-            <span className="font-semibold">{available}</span>
+            <span className="font-semibold">{available ?? '—'}</span>
           </p>
 
           <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">

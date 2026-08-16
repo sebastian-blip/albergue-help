@@ -88,7 +88,7 @@ export function ShelterDetailPage() {
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4 shrink-0 text-gray-500" aria-hidden="true" />
             <p>
-              Capacidad total: {shelter.capacity} · Ocupación actual: {shelter.current_occupancy}
+              Capacidad total: {shelter.capacity ?? 'Capacidad no informada'} · Ocupación actual: {shelter.current_occupancy ?? 'Ocupación no informada'}
             </p>
           </div>
         </div>
@@ -108,6 +108,12 @@ export function ShelterDetailPage() {
         {shelter.contact_name && (
           <p className="mt-3 text-sm text-gray-600">
             Contacto: {shelter.contact_name}
+          </p>
+        )}
+
+        {shelter.available_capacity === null && (
+          <p className="mt-3 text-sm text-gray-700">
+            La disponibilidad no está registrada. Te recomendamos llamar al albergue para confirmar.
           </p>
         )}
 

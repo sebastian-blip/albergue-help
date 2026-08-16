@@ -37,8 +37,8 @@ class Shelter(Base):
     city: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     department: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
 
-    capacity: Mapped[int] = mapped_column(Integer, nullable=False)
-    current_occupancy: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    capacity: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    current_occupancy: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     phone: Mapped[str] = mapped_column(String(50), nullable=False)
     contact_name: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -69,16 +69,21 @@ class Shelter(Base):
     )
 
     __table_args__ = (
-        CheckConstraint("capacity > 0", name="ck_shelter_capacity_positive"),
         CheckConstraint(
-            "current_occupancy >= 0", name="ck_shelter_occupancy_non_negative"
+            "capacity IS NULL OR capacity > 0", name="ck_shelter_capacity_positive"
         ),
         CheckConstraint(
-            "current_occupancy <= capacity",
+            "current_occupancy IS NULL OR current_occupancy >= 0",
+            name="ck_shelter_occupancy_non_negative",
+        ),
+        CheckConstraint(
+            "capacity IS NULL OR current_occupancy IS NULL OR current_occupancy <= capacity",
             name="ck_shelter_occupancy_not_exceed_capacity",
         ),
     )
 
     @property
-    def available_capacity(self) -> int:
+    def available_capacity(self) -> int | None:
+        if self.capacity is None or self.current_occupancy is None:
+            return None
         return self.capacity - self.current_occupancy

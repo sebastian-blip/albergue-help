@@ -23,15 +23,15 @@ export function ShelterForm({
     neighborhood: shelter?.neighborhood ?? '',
     city: shelter?.city ?? '',
     department: shelter?.department ?? '',
-    capacity: shelter?.capacity ?? 0,
-    current_occupancy: shelter?.current_occupancy ?? 0,
+    capacity: shelter?.capacity ?? null,
+    current_occupancy: shelter?.current_occupancy ?? null,
     phone: shelter?.phone ?? '',
     contact_name: shelter?.contact_name ?? '',
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  const handleChange = (field: keyof ShelterCreate, value: string | number) => {
+  const handleChange = (field: keyof ShelterCreate, value: string | number | null) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
     if (errors[field]) {
       setErrors((prev) => {
@@ -53,14 +53,18 @@ export function ShelterForm({
     if (!formData.phone.trim()) nextErrors.phone = 'El teléfono es obligatorio'
     if (!formData.contact_name.trim()) nextErrors.contact_name = 'El nombre de contacto es obligatorio'
 
-    if (formData.capacity <= 0) {
+    if (formData.capacity !== null && formData.capacity <= 0) {
       nextErrors.capacity = 'La capacidad debe ser mayor a 0'
     }
 
-    const occupancy = formData.current_occupancy ?? 0
-    if (occupancy < 0) {
+    const occupancy = formData.current_occupancy ?? null
+    if (occupancy !== null && occupancy < 0) {
       nextErrors.current_occupancy = 'La ocupación no puede ser negativa'
-    } else if (formData.capacity > 0 && occupancy > formData.capacity) {
+    } else if (
+      formData.capacity !== null &&
+      occupancy !== null &&
+      occupancy > formData.capacity
+    ) {
       nextErrors.current_occupancy = 'La ocupación no puede superar la capacidad'
     }
 
@@ -81,6 +85,7 @@ export function ShelterForm({
           city: formData.city,
           department: formData.department,
           capacity: formData.capacity,
+          current_occupancy: formData.current_occupancy,
           phone: formData.phone,
           contact_name: formData.contact_name,
         } as ShelterUpdate)
@@ -198,9 +203,13 @@ export function ShelterForm({
           <input
             id="capacity"
             type="number"
-            min={1}
-            value={formData.capacity}
-            onChange={(e) => handleChange('capacity', Number(e.target.value))}
+            value={formData.capacity ?? ''}
+            onChange={(e) =>
+              handleChange(
+                'capacity',
+                e.target.value === '' ? null : Number(e.target.value),
+              )
+            }
             className={inputClass('capacity')}
           />
           {errors.capacity && <p className="mt-1 text-sm text-red-700">{errors.capacity}</p>}
@@ -218,8 +227,13 @@ export function ShelterForm({
               id="current_occupancy"
               type="number"
               min={0}
-              value={formData.current_occupancy}
-              onChange={(e) => handleChange('current_occupancy', Number(e.target.value))}
+              value={formData.current_occupancy ?? ''}
+              onChange={(e) =>
+                handleChange(
+                  'current_occupancy',
+                  e.target.value === '' ? null : Number(e.target.value),
+                )
+              }
               className={inputClass('current_occupancy')}
             />
             {errors.current_occupancy && (

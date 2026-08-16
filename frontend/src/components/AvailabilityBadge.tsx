@@ -2,7 +2,7 @@ import type { ShelterStatus } from '../types/shelter'
 
 interface AvailabilityBadgeProps {
   status: ShelterStatus
-  availableCapacity: number
+  availableCapacity: number | null
 }
 
 const statusConfig: Record<
@@ -36,9 +36,14 @@ export function AvailabilityBadge({ status, availableCapacity }: AvailabilityBad
       >
         {config.label}
       </span>
-      {status === 'OPEN' && (
+      {status === 'OPEN' && availableCapacity !== null && (
         <span className="text-sm text-gray-700">
           {availableCapacity} {availableCapacity === 1 ? 'cupo disponible' : 'cupos disponibles'}
+        </span>
+      )}
+      {availableCapacity === null && (
+        <span className="text-sm text-gray-700">
+          Consultar disponibilidad
         </span>
       )}
     </div>

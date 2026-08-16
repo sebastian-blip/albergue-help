@@ -1,4 +1,4 @@
-import { MapPin } from 'lucide-react'
+import { MapPin, Phone } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { Shelter } from '../types/shelter'
 import { AvailabilityBadge } from './AvailabilityBadge'
@@ -18,6 +18,15 @@ export function ShelterCard({ shelter }: ShelterCardProps) {
           status={shelter.status}
           availableCapacity={shelter.available_capacity}
         />
+        {shelter.available_capacity === null && (
+          <a
+            href={`tel:${shelter.phone.replace(/\s/g, '')}`}
+            className="inline-flex items-center gap-1 text-sm font-medium text-blue-700 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2"
+          >
+            <Phone className="h-4 w-4" aria-hidden="true" />
+            {shelter.phone}
+          </a>
+        )}
       </div>
 
       <div className="mb-4 flex items-start gap-1.5 text-sm text-gray-700">

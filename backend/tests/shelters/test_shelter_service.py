@@ -229,3 +229,60 @@ async def test_delete_shelter(service: ShelterService) -> None:
 
     with pytest.raises(ShelterNotFoundError):
         await service.get_shelter(created.id)
+
+
+@pytest.mark.asyncio
+async def test_create_shelter_with_null_capacity_and_occupancy(
+    service: ShelterService,
+) -> None:
+    data = _valid_create_data(capacity=None, current_occupancy=None)
+    shelter = await service.create_shelter(data)
+
+    assert shelter.capacity is None
+    assert shelter.current_occupancy is None
+    assert shelter.available_capacity is None
+    assert shelter.status == ShelterStatus.OPEN
+
+
+@pytest.mark.asyncio
+async def test_create_shelter_with_known_capacity_and_null_occupancy(
+    service: ShelterService,
+) -> None:
+    data = _valid_create_data(capacity=100, current_occupancy=None)
+    shelter = await service.create_shelter(data)
+
+    assert shelter.capacity == 100
+    assert shelter.current_occupancy is None
+    assert shelter.available_capacity is None
+
+
+@pytest.mark.asyncio
+async def test_update_shelter_to_null_capacity_and_occupancy(
+    service: ShelterService,
+) -> None:
+    created = await service.create_shelter(_valid_create_data())
+    updated = await service.update_shelter(
+        created.id, ShelterUpdate(capacity=None, current_occupancy=None)
+    )
+
+    assert updated.capacity is None
+    assert updated.current_occupancy is None
+    assert updated.available_capacity is None
+
+
+@pytest.mark.asyncio
+async def test_filter_has_capacity_true_excludes_unknown(
+    service: ShelterService,
+) -> None:
+    await service.create_shelter(
+        _valid_create_data(name="Con cupos", capacity=100, current_occupancy=50)
+    )
+    await service.create_shelter(
+        _valid_create_data(name="Desconocido", capacity=None, current_occupancy=None)
+    )
+
+    filters = ShelterFilters(has_capacity=True)
+    shelters, total = await service.get_shelters(filters)
+
+    assert total == 1
+    assert shelters[0].name == "Con cupos"

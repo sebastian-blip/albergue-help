@@ -15,15 +15,17 @@ class ShelterCreate(BaseModel):
     city: str = Field(..., min_length=1, max_length=100)
     department: str = Field(..., min_length=1, max_length=100)
 
-    capacity: int = Field(..., gt=0)
-    current_occupancy: int = Field(default=0, ge=0)
+    capacity: int | None = Field(default=None, gt=0)
+    current_occupancy: int | None = Field(default=0, ge=0)
 
     phone: str = Field(..., min_length=1, max_length=50)
     contact_name: str = Field(..., min_length=1, max_length=100)
 
     @field_validator("current_occupancy")
     @classmethod
-    def occupancy_not_exceed_capacity(cls, value: int, info) -> int:
+    def occupancy_not_exceed_capacity(cls, value: int | None, info) -> int | None:
+        if value is None:
+            return value
         capacity = info.data.get("capacity")
         if capacity is not None and value > capacity:
             msg = "current_occupancy cannot exceed capacity"
@@ -74,9 +76,9 @@ class ShelterResponse(BaseModel):
     city: str
     department: str
 
-    capacity: int
-    current_occupancy: int
-    available_capacity: int
+    capacity: int | None
+    current_occupancy: int | None
+    available_capacity: int | None
 
     phone: str
     contact_name: str

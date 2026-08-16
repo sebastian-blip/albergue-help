@@ -436,3 +436,145 @@ async def test_filter_combined(
     assert len(data["items"]) == 1
     assert data["items"][0]["city"] == "Cali"
     assert data["items"][0]["neighborhood"] == "San José"
+
+
+@pytest.mark.asyncio
+async def test_create_shelter_with_null_capacity(
+    client: AsyncClient, auth_headers: dict
+) -> None:
+    payload = {
+        "name": "Albergue Sin Capacidad Informada",
+        "address": "Carrera 1",
+        "neighborhood": "Centro",
+        "city": "Cali",
+        "department": "Valle",
+        "capacity": None,
+        "current_occupancy": None,
+        "phone": "3000000000",
+        "contact_name": "Contacto",
+    }
+    response = await client.post("/api/v1/shelters", json=payload, headers=auth_headers)
+
+    assert response.status_code == 201
+    data = response.json()
+    assert data["capacity"] is None
+    assert data["current_occupancy"] is None
+    assert data["available_capacity"] is None
+
+
+@pytest.mark.asyncio
+async def test_create_shelter_with_null_current_occupancy(
+    client: AsyncClient, auth_headers: dict
+) -> None:
+    payload = {
+        "name": "Albergue Con Capacidad Pero Sin Ocupación",
+        "address": "Carrera 1",
+        "neighborhood": "Centro",
+        "city": "Cali",
+        "department": "Valle",
+        "capacity": 50,
+        "current_occupancy": None,
+        "phone": "3000000000",
+        "contact_name": "Contacto",
+    }
+    response = await client.post("/api/v1/shelters", json=payload, headers=auth_headers)
+
+    assert response.status_code == 201
+    data = response.json()
+    assert data["capacity"] == 50
+    assert data["current_occupancy"] is None
+    assert data["available_capacity"] is None
+
+
+@pytest.mark.asyncio
+async def test_update_shelter_clears_capacity_and_occupancy(
+    client: AsyncClient, valid_payload: dict, auth_headers: dict
+) -> None:
+    created = (
+        await client.post("/api/v1/shelters", json=valid_payload, headers=auth_headers)
+    ).json()
+
+    response = await client.put(
+        f"/api/v1/shelters/{created['id']}",
+        json={"capacity": None, "current_occupancy": None},
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["capacity"] is None
+    assert data["current_occupancy"] is None
+    assert data["available_capacity"] is None
+
+
+@pytest.mark.asyncio
+async def test_list_and_detail_show_unknown_capacity(
+    client: AsyncClient, auth_headers: dict
+) -> None:
+    payload = {
+        "name": "Albergue Desconocido",
+        "address": "Carrera 1",
+        "neighborhood": "Centro",
+        "city": "Cali",
+        "department": "Valle",
+        "capacity": None,
+        "current_occupancy": None,
+        "phone": "3000000000",
+        "contact_name": "Contacto",
+    }
+    created = (
+        await client.post("/api/v1/shelters", json=payload, headers=auth_headers)
+    ).json()
+
+    list_response = await client.get("/api/v1/shelters")
+    assert list_response.status_code == 200
+    item = next(s for s in list_response.json()["items"] if s["id"] == created["id"])
+    assert item["capacity"] is None
+    assert item["available_capacity"] is None
+
+    detail_response = await client.get(f"/api/v1/shelters/{created['id']}")
+    assert detail_response.status_code == 200
+    assert detail_response.json()["capacity"] is None
+
+
+@pytest.mark.asyncio
+async def test_filter_has_capacity_true_excludes_null_capacity(
+    client: AsyncClient, auth_headers: dict
+) -> None:
+    await client.post(
+        "/api/v1/shelters",
+        json={
+            "name": "Con cupos",
+            "address": "A",
+            "neighborhood": "B",
+            "city": "Cali",
+            "department": "Valle",
+            "capacity": 100,
+            "current_occupancy": 80,
+            "phone": "1",
+            "contact_name": "X",
+        },
+        headers=auth_headers,
+    )
+    await client.post(
+        "/api/v1/shelters",
+        json={
+            "name": "Capacidad desconocida",
+            "address": "A",
+            "neighborhood": "B",
+            "city": "Cali",
+            "department": "Valle",
+            "capacity": None,
+            "current_occupancy": None,
+            "phone": "1",
+            "contact_name": "X",
+        },
+        headers=auth_headers,
+    )
+
+    response = await client.get("/api/v1/shelters?has_capacity=true")
+    data = response.json()
+
+    assert response.status_code == 200
+    assert len(data["items"]) == 1
+    assert data["items"][0]["name"] == "Con cupos"

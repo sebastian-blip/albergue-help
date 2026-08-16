@@ -18,31 +18,34 @@ from app.modules.shelters.schemas import (
 
 
 def _compute_status(
-    *, current_status: ShelterStatus, capacity: int, occupancy: int
+    *, current_status: ShelterStatus, capacity: int | None, occupancy: int | None
 ) -> ShelterStatus:
     """Calcula el estado operativo respetando la prioridad CLOSED > FULL > OPEN.
 
     Reglas:
     - Si el estado actual es CLOSED, se mantiene CLOSED (override manual).
+    - Si no se conoce la capacidad u ocupación, se conserva el estado actual.
     - Si no, se calcula según la ocupación:
       - occupancy == capacity -> FULL
       - occupancy < capacity -> OPEN
     """
     if current_status == ShelterStatus.CLOSED:
         return ShelterStatus.CLOSED
+    if capacity is None or occupancy is None:
+        return current_status
     if occupancy == capacity:
         return ShelterStatus.FULL
     return ShelterStatus.OPEN
 
 
-def _validate_occupancy(capacity: int, occupancy: int) -> None:
-    if capacity <= 0:
+def _validate_occupancy(capacity: int | None, occupancy: int | None) -> None:
+    if capacity is not None and capacity <= 0:
         msg = "Capacity must be greater than 0"
         raise InvalidShelterOccupancyError(msg)
-    if occupancy < 0:
+    if occupancy is not None and occupancy < 0:
         msg = "Occupancy cannot be negative"
         raise InvalidShelterOccupancyError(msg)
-    if occupancy > capacity:
+    if capacity is not None and occupancy is not None and occupancy > capacity:
         msg = "Occupancy cannot exceed capacity"
         raise InvalidShelterOccupancyError(msg)
 
@@ -101,15 +104,12 @@ class ShelterService:
     ) -> Shelter:
         shelter = await self.get_shelter(shelter_id)
 
-        new_capacity = data.capacity if data.capacity is not None else shelter.capacity
-        new_occupancy = (
-            data.current_occupancy
-            if data.current_occupancy is not None
-            else shelter.current_occupancy
-        )
+        provided = data.model_dump(exclude_unset=True)
+        new_capacity = provided.get("capacity", shelter.capacity)
+        new_occupancy = provided.get("current_occupancy", shelter.current_occupancy)
         _validate_occupancy(new_capacity, new_occupancy)
 
-        for field, value in data.model_dump(exclude_unset=True).items():
+        for field, value in provided.items():
             if field in {"status"}:
                 continue
             setattr(shelter, field, value)

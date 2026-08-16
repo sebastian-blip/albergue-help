@@ -33,9 +33,17 @@ class ShelterRepository:
         if verification_status is not None:
             query = query.where(Shelter.verification_status == verification_status)
         if has_capacity is True:
-            query = query.where(Shelter.current_occupancy < Shelter.capacity)
+            query = query.where(
+                Shelter.capacity.is_not(None),
+                Shelter.current_occupancy.is_not(None),
+                Shelter.current_occupancy < Shelter.capacity,
+            )
         elif has_capacity is False:
-            query = query.where(Shelter.current_occupancy >= Shelter.capacity)
+            query = query.where(
+                Shelter.capacity.is_not(None),
+                Shelter.current_occupancy.is_not(None),
+                Shelter.current_occupancy >= Shelter.capacity,
+            )
 
         return query
 
