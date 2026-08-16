@@ -14,11 +14,13 @@ export function ShelterCard({ shelter }: ShelterCardProps) {
         <h2 className="text-lg font-semibold text-gray-900">
           {shelter.name}
         </h2>
-        <AvailabilityBadge
-          status={shelter.status}
-          capacity={shelter.capacity}
-          currentOccupancy={shelter.current_occupancy}
-        />
+        {shelter.capacity !== null && shelter.current_occupancy !== null && (
+          <AvailabilityBadge
+            status={shelter.status}
+            capacity={shelter.capacity}
+            currentOccupancy={shelter.current_occupancy}
+          />
+        )}
         {(shelter.capacity === null || shelter.current_occupancy === null) && (
           <a
             href={`tel:${shelter.phone.replace(/\s/g, '')}`}
