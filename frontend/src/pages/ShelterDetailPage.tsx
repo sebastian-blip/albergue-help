@@ -68,13 +68,15 @@ export function ShelterDetailPage() {
       <article className="rounded border border-gray-300 bg-white p-4 shadow-sm">
         <div className="mb-4">
           <h1 className="text-xl font-semibold text-gray-900">{shelter.name}</h1>
-          <div className="mt-2">
-            <AvailabilityBadge
-              status={shelter.status}
-              capacity={shelter.capacity}
-              currentOccupancy={shelter.current_occupancy}
-            />
-          </div>
+          {shelter.capacity !== null && shelter.current_occupancy !== null && (
+            <div className="mt-2">
+              <AvailabilityBadge
+                status={shelter.status}
+                capacity={shelter.capacity}
+                currentOccupancy={shelter.current_occupancy}
+              />
+            </div>
+          )}
         </div>
 
         <div className="mb-6 space-y-3 text-sm text-gray-700">
@@ -109,12 +111,6 @@ export function ShelterDetailPage() {
         {shelter.contact_name && (
           <p className="mt-3 text-sm text-gray-600">
             Contacto: {shelter.contact_name}
-          </p>
-        )}
-
-        {shelter.available_capacity === null && (
-          <p className="mt-3 text-sm text-gray-700">
-            La disponibilidad no está registrada. Te recomendamos llamar al albergue para confirmar.
           </p>
         )}
 
