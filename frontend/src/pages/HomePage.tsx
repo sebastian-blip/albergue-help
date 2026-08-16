@@ -43,7 +43,7 @@ export function HomePage() {
           Encuentra un albergue disponible
         </h1>
         <p className="mt-1 text-sm text-gray-600">
-          Información actualizada sobre albergues habilitados durante emergencias en Colombia.
+          Información actualizada sobre albergues Temporales.
         </p>
       </section>
 
