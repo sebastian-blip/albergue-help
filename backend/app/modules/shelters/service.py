@@ -33,7 +33,7 @@ def _compute_status(
         return ShelterStatus.CLOSED
     if capacity is None or occupancy is None:
         return current_status
-    if occupancy == capacity:
+    if occupancy >= capacity:
         return ShelterStatus.FULL
     return ShelterStatus.OPEN
 
@@ -44,9 +44,6 @@ def _validate_occupancy(capacity: int | None, occupancy: int | None) -> None:
         raise InvalidShelterOccupancyError(msg)
     if occupancy is not None and occupancy < 0:
         msg = "Occupancy cannot be negative"
-        raise InvalidShelterOccupancyError(msg)
-    if capacity is not None and occupancy is not None and occupancy > capacity:
-        msg = "Occupancy cannot exceed capacity"
         raise InvalidShelterOccupancyError(msg)
 
 
@@ -97,6 +94,7 @@ class ShelterService:
             status=filters.status,
             verification_status=filters.verification_status,
             has_capacity=filters.has_capacity,
+            order_by="availability",
         )
 
     async def update_shelter(

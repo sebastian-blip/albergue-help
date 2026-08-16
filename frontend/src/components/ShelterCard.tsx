@@ -16,9 +16,10 @@ export function ShelterCard({ shelter }: ShelterCardProps) {
         </h2>
         <AvailabilityBadge
           status={shelter.status}
-          availableCapacity={shelter.available_capacity}
+          capacity={shelter.capacity}
+          currentOccupancy={shelter.current_occupancy}
         />
-        {shelter.available_capacity === null && (
+        {(shelter.capacity === null || shelter.current_occupancy === null) && (
           <a
             href={`tel:${shelter.phone.replace(/\s/g, '')}`}
             className="inline-flex items-center gap-1 text-sm font-medium text-blue-700 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2"

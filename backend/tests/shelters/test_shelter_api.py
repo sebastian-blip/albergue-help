@@ -1,5 +1,7 @@
 from uuid import uuid4
 
+import asyncio
+
 import pytest
 from httpx import AsyncClient
 
@@ -57,15 +59,18 @@ async def test_create_shelter_rejects_invalid_capacity(
 
 
 @pytest.mark.asyncio
-async def test_create_shelter_rejects_occupancy_exceeding_capacity(
+async def test_create_shelter_allows_occupancy_exceeding_capacity(
     client: AsyncClient,
     valid_payload: dict,
     auth_headers: dict,
 ) -> None:
-    invalid = {**valid_payload, "capacity": 50, "current_occupancy": 51}
-    response = await client.post("/api/v1/shelters", json=invalid, headers=auth_headers)
+    payload = {**valid_payload, "capacity": 50, "current_occupancy": 51}
+    response = await client.post("/api/v1/shelters", json=payload, headers=auth_headers)
 
-    assert response.status_code == 422
+    assert response.status_code == 201
+    data = response.json()
+    assert data["status"] == ShelterStatus.FULL.value
+    assert data["available_capacity"] == -1
 
 
 @pytest.mark.asyncio
@@ -436,6 +441,52 @@ async def test_filter_combined(
     assert len(data["items"]) == 1
     assert data["items"][0]["city"] == "Cali"
     assert data["items"][0]["neighborhood"] == "San José"
+
+
+@pytest.mark.asyncio
+async def test_list_shelters_orders_by_availability_priority(
+    client: AsyncClient, auth_headers: dict
+) -> None:
+    # Create records in reverse order within each priority group so that
+    # the default created_at descending tie-breaker produces the expected A-G order.
+    shelters = [
+        # Priority 1: known availability
+        {"name": "B", "capacity": 50, "current_occupancy": 49},
+        {"name": "A", "capacity": 50, "current_occupancy": 20},
+        # Priority 2: known, no availability
+        {"name": "D", "capacity": 50, "current_occupancy": 60},
+        {"name": "C", "capacity": 50, "current_occupancy": 50},
+        # Priority 3: unknown availability
+        {"name": "G", "capacity": None, "current_occupancy": None},
+        {"name": "F", "capacity": 50, "current_occupancy": None},
+        {"name": "E", "capacity": None, "current_occupancy": 20},
+    ]
+
+    for s in shelters:
+        await client.post(
+            "/api/v1/shelters",
+            json={
+                "name": s["name"],
+                "address": "A",
+                "neighborhood": "B",
+                "city": "Cali",
+                "department": "Valle",
+                "capacity": s["capacity"],
+                "current_occupancy": s["current_occupancy"],
+                "phone": "1",
+                "contact_name": "X",
+            },
+            headers=auth_headers,
+        )
+        await asyncio.sleep(0.01)
+
+    response = await client.get("/api/v1/shelters?page=1&page_size=20")
+    data = response.json()
+
+    assert response.status_code == 200
+    assert data["total"] == 7
+    names = [item["name"] for item in data["items"]]
+    assert names == ["A", "B", "C", "D", "E", "F", "G"]
 
 
 @pytest.mark.asyncio

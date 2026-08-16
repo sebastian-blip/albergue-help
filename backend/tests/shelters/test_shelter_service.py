@@ -91,7 +91,7 @@ async def test_create_shelter_rejects_negative_occupancy(
 
 
 @pytest.mark.asyncio
-async def test_create_shelter_rejects_occupancy_exceeding_capacity(
+async def test_create_shelter_treats_occupancy_exceeding_capacity_as_full(
     service: ShelterService,
 ) -> None:
     data = ShelterCreate.model_construct(
@@ -105,8 +105,10 @@ async def test_create_shelter_rejects_occupancy_exceeding_capacity(
         phone="123",
         contact_name="Name",
     )
-    with pytest.raises(InvalidShelterOccupancyError):
-        await service.create_shelter(data)
+    shelter = await service.create_shelter(data)
+
+    assert shelter.status == ShelterStatus.FULL
+    assert shelter.available_capacity == -1
 
 
 @pytest.mark.asyncio

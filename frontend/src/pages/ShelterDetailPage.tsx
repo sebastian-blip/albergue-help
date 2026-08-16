@@ -71,7 +71,8 @@ export function ShelterDetailPage() {
           <div className="mt-2">
             <AvailabilityBadge
               status={shelter.status}
-              availableCapacity={shelter.available_capacity}
+              capacity={shelter.capacity}
+              currentOccupancy={shelter.current_occupancy}
             />
           </div>
         </div>

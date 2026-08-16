@@ -2,50 +2,66 @@ import type { ShelterStatus } from '../types/shelter'
 
 interface AvailabilityBadgeProps {
   status: ShelterStatus
-  availableCapacity: number | null
+  capacity: number | null
+  currentOccupancy: number | null
 }
 
-const statusConfig: Record<
-  ShelterStatus,
-  { label: string; bgColor: string; textColor: string }
-> = {
-  OPEN: {
-    label: 'Disponible',
-    bgColor: 'bg-green-100',
-    textColor: 'text-green-800',
-  },
-  FULL: {
-    label: 'Lleno',
-    bgColor: 'bg-red-100',
-    textColor: 'text-red-800',
-  },
-  CLOSED: {
-    label: 'Cerrado',
-    bgColor: 'bg-gray-200',
-    textColor: 'text-gray-700',
-  },
-}
+export function AvailabilityBadge({
+  status,
+  capacity,
+  currentOccupancy,
+}: AvailabilityBadgeProps) {
+  const known = capacity !== null && currentOccupancy !== null
+  const available = known ? capacity - currentOccupancy : null
+  const hasAvailability = known && currentOccupancy < capacity
 
-export function AvailabilityBadge({ status, availableCapacity }: AvailabilityBadgeProps) {
-  const config = statusConfig[status]
+  if (status === 'CLOSED') {
+    return (
+      <div className="flex flex-col gap-0.5">
+        <span className="inline-flex w-fit items-center rounded bg-gray-200 px-2 py-0.5 text-xs font-semibold text-gray-700">
+          Cerrado
+        </span>
+        <span className="text-sm text-gray-700">
+          {known
+            ? hasAvailability
+              ? `${available} ${available === 1 ? 'cupo disponible' : 'cupos disponibles'}`
+              : 'Sin disponibilidad'
+            : 'Disponibilidad no informada'}
+        </span>
+      </div>
+    )
+  }
+
+  if (!known) {
+    return (
+      <div className="flex flex-col gap-0.5">
+        <span className="inline-flex w-fit items-center rounded bg-gray-200 px-2 py-0.5 text-xs font-semibold text-gray-700">
+          Disponibilidad no informada
+        </span>
+        <span className="text-sm text-gray-700">Disponibilidad no informada</span>
+      </div>
+    )
+  }
+
+  if (hasAvailability) {
+    return (
+      <div className="flex flex-col gap-0.5">
+        <span className="inline-flex w-fit items-center rounded bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800">
+          Disponible
+        </span>
+        <span className="text-sm text-gray-700">
+          {available} {available === 1 ? 'cupo disponible' : 'cupos disponibles'}
+        </span>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-0.5">
-      <span
-        className={`inline-flex w-fit items-center rounded px-2 py-0.5 text-xs font-semibold ${config.bgColor} ${config.textColor}`}
-      >
-        {config.label}
+      <span className="inline-flex w-fit items-center rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-800">
+        Sin disponibilidad
       </span>
-      {status === 'OPEN' && availableCapacity !== null && (
-        <span className="text-sm text-gray-700">
-          {availableCapacity} {availableCapacity === 1 ? 'cupo disponible' : 'cupos disponibles'}
-        </span>
-      )}
-      {availableCapacity === null && (
-        <span className="text-sm text-gray-700">
-          Consultar disponibilidad
-        </span>
-      )}
+      <span className="text-sm text-gray-700">Sin disponibilidad</span>
     </div>
   )
 }

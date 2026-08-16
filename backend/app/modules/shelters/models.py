@@ -76,10 +76,6 @@ class Shelter(Base):
             "current_occupancy IS NULL OR current_occupancy >= 0",
             name="ck_shelter_occupancy_non_negative",
         ),
-        CheckConstraint(
-            "capacity IS NULL OR current_occupancy IS NULL OR current_occupancy <= capacity",
-            name="ck_shelter_occupancy_not_exceed_capacity",
-        ),
     )
 
     @property

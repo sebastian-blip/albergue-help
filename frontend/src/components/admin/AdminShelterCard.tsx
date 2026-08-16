@@ -14,10 +14,11 @@ export function AdminShelterCard({
   onUpdateOccupancy,
   onDelete,
 }: AdminShelterCardProps) {
-  const available =
-    shelter.capacity !== null && shelter.current_occupancy !== null
-      ? shelter.capacity - shelter.current_occupancy
-      : null
+  const capacity = shelter.capacity
+  const occupancy = shelter.current_occupancy
+  const availabilityKnown = capacity !== null && occupancy !== null
+  const available = availabilityKnown ? capacity - occupancy : null
+  const hasAvailability = availabilityKnown && available !== null && available > 0
 
   return (
     <div className="rounded border border-gray-300 bg-white p-4">
@@ -74,7 +75,7 @@ export function AdminShelterCard({
         <div className="rounded bg-gray-50 p-2">
           <p className="text-xs text-gray-600">Disponibles</p>
           <p className="text-lg font-semibold text-gray-900">
-            {available ?? '—'}
+            {!availabilityKnown ? '—' : hasAvailability ? available : 'Sin disponibilidad'}
           </p>
         </div>
       </div>

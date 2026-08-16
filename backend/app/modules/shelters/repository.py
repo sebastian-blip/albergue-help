@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import desc, func, select
+from sqlalchemy import case, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.shelters.models import Shelter, ShelterStatus, VerificationStatus
@@ -70,6 +70,7 @@ class ShelterRepository:
         status: ShelterStatus | None = None,
         verification_status: VerificationStatus | None = None,
         has_capacity: bool | None = None,
+        order_by: str = "availability",
     ) -> tuple[list[Shelter], int]:
         base_query = self._build_filter_query(
             department=department,
@@ -85,8 +86,27 @@ class ShelterRepository:
         )
         total = total_result.scalar_one()
 
+        order_clauses: list = [desc(Shelter.created_at)]
+        if order_by == "availability":
+            availability_priority = case(
+                (
+                    Shelter.capacity.is_not(None)
+                    & Shelter.current_occupancy.is_not(None)
+                    & (Shelter.current_occupancy < Shelter.capacity),
+                    1,
+                ),
+                (
+                    Shelter.capacity.is_not(None)
+                    & Shelter.current_occupancy.is_not(None)
+                    & (Shelter.current_occupancy >= Shelter.capacity),
+                    2,
+                ),
+                else_=3,
+            )
+            order_clauses = [availability_priority, desc(Shelter.created_at)]
+
         result = await self.session.execute(
-            base_query.order_by(desc(Shelter.created_at))
+            base_query.order_by(*order_clauses)
             .offset((page - 1) * page_size)
             .limit(page_size),
         )

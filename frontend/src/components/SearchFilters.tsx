@@ -10,7 +10,6 @@ interface SearchFiltersProps {
 export function SearchFilters({ initialFilters, onSearch }: SearchFiltersProps) {
   const [city, setCity] = useState(initialFilters.city || '')
   const [neighborhood, setNeighborhood] = useState(initialFilters.neighborhood || '')
-  const [hasCapacity, setHasCapacity] = useState(initialFilters.has_capacity || false)
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
@@ -19,7 +18,6 @@ export function SearchFilters({ initialFilters, onSearch }: SearchFiltersProps) 
       page_size: 20,
       city: city.trim() || undefined,
       neighborhood: neighborhood.trim() || undefined,
-      has_capacity: hasCapacity || undefined,
     })
   }
 
@@ -51,19 +49,6 @@ export function SearchFilters({ initialFilters, onSearch }: SearchFiltersProps) 
           placeholder="Ej: San José"
           className="w-full rounded border border-gray-300 px-3 py-2.5 text-base text-gray-900 placeholder:text-gray-500 focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
         />
-      </div>
-
-      <div className="flex items-center gap-2">
-        <input
-          id="has_capacity"
-          type="checkbox"
-          checked={hasCapacity}
-          onChange={(e) => setHasCapacity(e.target.checked)}
-          className="h-4 w-4 rounded border-gray-300 text-blue-700 focus:ring-blue-700"
-        />
-        <label htmlFor="has_capacity" className="text-sm text-gray-700">
-          Mostrar solo albergues con cupos
-        </label>
       </div>
 
       <button
